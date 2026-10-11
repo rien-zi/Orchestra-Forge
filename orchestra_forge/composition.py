@@ -26,6 +26,7 @@ class Composition:
     bpm: float
     beats: float
     parts: tuple[Part, ...]
+    time_signature: tuple[int, int] = (4, 4)
 
     @property
     def seconds(self) -> float:
@@ -56,6 +57,13 @@ def load_composition(path: Path) -> Composition:
         raise ValueError("title must be a nonempty string")
     bpm = _number(data["bpm"], "bpm", 4, 1000)
     beats = _number(data["beats"], "beats", 0.01, 100000)
+    signature = data.get('time_signature', [4, 4])
+    if not isinstance(signature, list) or len(signature) != 2:
+        raise ValueError('time_signature must be [numerator, denominator]')
+    numerator = _integer(signature[0], 'time signature numerator', 1, 32)
+    denominator = _integer(signature[1], 'time signature denominator', 1, 32)
+    if denominator not in (1, 2, 4, 8, 16, 32):
+        raise ValueError('Time signature denominator must be a power of two')
     parts = []
     channels = set()
     for item in data["parts"]:
@@ -79,4 +87,4 @@ def load_composition(path: Path) -> Composition:
         parts.append(Part(name, program, channel, tuple(notes)))
     if not parts:
         raise ValueError("At least one part is required")
-    return Composition(title, bpm, beats, tuple(parts))
+    return Composition(title, bpm, beats, tuple(parts), (numerator, denominator))

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "orchestra-forge"
-version = "0.2.0"
+version = "0.3.0"
 description = "A small, modular CLI for original orchestral MIDI sketches"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -14,6 +14,10 @@ dependencies = []
 
 [project.scripts]
 orchestra-forge = "orchestra_forge.cli:main"
+orchestra-forge-audiolizer = "orchestra_forge.audiolizer:main"
 
 [tool.setuptools]
 packages = ["orchestra_forge"]
+
+[tool.setuptools.package-data]
+orchestra_forge = ["web/*.html", "web/*.css", "web/*.js"]

@@ -59,4 +59,21 @@ class ForgeTests(unittest.TestCase):
             path = Path(tmp)/'unicode.json'; path.write_text(json.dumps(data))
             write_midi(Path(tmp)/'unicode.mid', load_composition(path))
 
+class AudiolizerAndMeterTests(unittest.TestCase):
+    def test_catalogue_and_validation(self):
+        from orchestra_forge.audiolizer import NAMES, number
+        self.assertEqual(len(NAMES), 128)
+        self.assertEqual(NAMES[4], 'Electric Piano 1')
+        self.assertEqual(number({'pitch':60}, 'pitch', 24, 96, True), 60)
+        with self.assertRaises(ValueError): number({'pitch':True}, 'pitch', 24, 96, True)
+
+    def test_six_eight_metadata(self):
+        data = json.loads(EXAMPLE.read_text()); data['time_signature'] = [6,8]
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp)/'meter.json'; path.write_text(json.dumps(data))
+            score = load_composition(path)
+            midi = Path(tmp)/'meter.mid'; write_midi(midi,score)
+            self.assertEqual(score.time_signature, (6,8))
+            self.assertIn(bytes.fromhex('ff580406032408'), midi.read_bytes())
+
 if __name__ == '__main__': unittest.main()

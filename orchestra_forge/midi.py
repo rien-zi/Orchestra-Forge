@@ -37,10 +37,13 @@ def write_midi(path: Path, composition: Composition) -> None:
     tempo = round(60_000_000 / composition.bpm)
     title = composition.title.encode("utf-8")
     end_tick = round(composition.beats * PPQ)
+    numerator, denominator = composition.time_signature
+    clocks = 36 if denominator == 8 and numerator % 3 == 0 else 24
+    signature = bytes((numerator, denominator.bit_length() - 1, clocks, 8))
     conductor = [
         (0, 0, b"\xff\x03" + _vlq(len(title)) + title),
         (0, 1, b"\xff\x51\x03" + tempo.to_bytes(3, "big")),
-        (0, 2, b"\xff\x58\x04\x04\x02\x18\x08"),
+        (0, 2, b"\xff\x58\x04" + signature),
     ]
     chunks = [_track_chunk(conductor, end_tick)]
     for part in composition.parts:

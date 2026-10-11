@@ -1,81 +1,93 @@
 # Orchestra Forge
 
-A minimal Python CLI for orchestral composition data → MIDI → WAV. This is a deterministic music tool, not a trained AI model. Python uses only the standard library. FluidSynth and a separately obtained SoundFont provide instrument audio.
+A minimal Python toolkit for composition JSON → MIDI → WAV, with **Audiolizer**, a local visual instrument playground. It is a deterministic music tool, not a trained AI model. Python runtime code uses only the standard library; FluidSynth and a separately obtained SoundFont provide audio.
 
-## macOS setup
+## Setup on macOS
 
-Requires Python 3.10 or newer.
+Requires Python 3.10+ and FluidSynth on PATH.
 
 ```sh
 brew install python fluid-synth
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install .
+./setup.sh
 fluidsynth --version
-orchestra-forge --help
 ```
 
-Installation uses setuptools as a build dependency; there are no Python runtime dependencies. For source development use `python -m pip install -e .`, or run `python -m orchestra_forge` from the repository root. On Intel Macs, Homebrew may warn about platform support or build from source; diagnose any actual installation error separately.
+`setup.sh` creates this checkout's `.venv` and installs the package. Setuptools is a build dependency; there are no Python runtime dependencies. To update after pulling changes, rerun setup. Use `PYTHON=/path/to/python3 ./setup.sh` to select a Python installation.
 
-Obtain a General MIDI `.sf2` SoundFont from a source whose licensing fits your release. [GeneralUser GS by S. Christian Collins](https://www.schristiancollins.com/generaluser) is one option. SoundFonts and generated audio are not bundled or committed.
+Obtain a licensed General MIDI `.sf2` SoundFont; [GeneralUser GS](https://www.schristiancollins.com/generaluser) is one option. Put it in the ignored `soundfonts/` folder or specify an absolute path. SoundFonts, generated audio and game compositions are not bundled in this public repository.
+
+## Audiolizer
 
 ```sh
 export ORCHESTRA_FORGE_SOUNDFONT="/absolute/path/to/your.sf2"
-orchestra-forge demo --composition examples/demo.json --midi samples/demo.mid --output samples/demo.wav
+./start.sh
 ```
 
-The public example is a six-second strings-and-harp demonstration. Commands use explicit paths and work from any directory after installation. `--soundfont` overrides the environment variable.
+The browser opens `http://127.0.0.1:8765`. Keep the terminal running; Ctrl+C stops the server. Add `--port 8766` if needed, `--no-open` to skip opening a browser, or `--soundfont /path/to/library.sf2` to override the environment variable. Without either override, the default is `soundfonts/GeneralUser GS v1.471.sf2` relative to the current directory.
 
-## Keep game music private
+Select among 128 General MIDI program names, click a piano key, and adjust pitch, touch, duration and listening volume. Audition one note, a major chord or a short major-key phrase. **Copy settings** gives the exact instrument, MIDI pitch, velocity and duration to share. Middle C is C4 / MIDI 60; tuning uses A4 = 440 Hz.
 
-Keep project-specific compositions and exports in a sibling directory **outside this repository**. For example:
+Preview audio comes from actual FluidSynth rendering. Temporary MIDI/WAV files are deleted after rendering; a small in-memory cache disappears when the server stops. The server binds only to loopback, uses no external web assets, performs no uploads, and has no routes that edit compositions. It is a local development tool, not a hosted production service. Note release/reverb can extend beyond the requested duration. Preview gain and listening volume differ from a final music mix. No microphone input or pitch detection is included.
 
-```text
-Orchestra-Forge/          # public tool and generic example
-Orchestra-Forge-Private/  # private composition JSON, MIDI, WAV, notes
-```
+The installed command is `orchestra-forge-audiolizer`; `python -m orchestra_forge.audiolizer` works too.
+
+## CLI example
 
 ```sh
-orchestra-forge demo \
-  --composition ../Orchestra-Forge-Private/compositions/my_cue.json \
-  --midi ../Orchestra-Forge-Private/audio/my_cue.mid \
-  --output ../Orchestra-Forge-Private/audio/my_cue.wav
+.venv/bin/orchestra-forge demo --composition examples/demo.json --midi samples/demo.mid --output samples/demo.wav --soundfont /path/to/library.sf2
+.venv/bin/orchestra-forge compose --composition examples/demo.json --output samples/demo.mid
+.venv/bin/orchestra-forge render --midi samples/demo.mid --output samples/demo.wav --soundfont /path/to/library.sf2
 ```
 
-The CLI reads local files; it does not upload them. The public repository should contain only reusable code, documentation, tests, and the generic example. MIDI, audio, SoundFonts, and a `private/` directory are also ignored as a secondary safeguard. `.gitignore` does not protect previously tracked files or arbitrary JSON files: keep private compositions outside the checkout and review staged files before every push. Back up the private folder separately; this project does not provide encrypted storage or private remote backups.
+The public example is a generic six-second strings-and-harp demonstration. `examples/` contains no project-specific music. Commands use explicit paths and work from any directory after installation.
 
 ## Composition format
 
-See `examples/demo.json`. Fields:
+See `examples/demo.json`:
 
 - `title`: track title.
-- `bpm`: tempo in quarter notes per minute.
-- `beats`: total duration in quarter-note beats, including any silence.
-- `parts`: instrument tracks with `name`, zero-based General MIDI `program` (0–127), and unique zero-based `channel` (0–15, excluding percussion channel 9).
-- Each note is `[start_beat, duration_beats, MIDI_pitch, velocity]`; pitch is 0–127 and velocity is 1–127.
+- `bpm`: quarter notes per minute.
+- `beats`: duration in quarter-note beats, including written silence.
+- Optional `time_signature`: `[numerator, denominator]`, default `[4, 4]`; `[6, 8]` is supported. The BPM/beat units stay quarter notes regardless of meter.
+- `parts`: tracks with `name`, zero-based GM `program` (0–127), and unique zero-based `channel` (0–15, excluding percussion channel 9).
+- Each note is `[start_beat, duration_beats, MIDI_pitch, velocity]`; pitch 0–127, velocity 1–127.
+
+## What is where
+
+| File or folder | Purpose |
+| --- | --- |
+| `orchestra_forge/composition.py` | Immutable score data and validated JSON loading |
+| `orchestra_forge/midi.py` | MIDI type-1 writer, tempo, meter and UTF-8 labels |
+| `orchestra_forge/cli.py` | Compose, render and demo commands |
+| `orchestra_forge/audiolizer.py` | Local preview server and instrument catalogue |
+| `orchestra_forge/web/` | Packaged Audiolizer HTML, CSS and JavaScript |
+| `examples/` | Generic, public demonstration score |
+| `tests/` | Standard-library checks |
+| `setup.sh` / `start.sh` | Create/update this project's environment / launch Audiolizer |
+| `pyproject.toml` | Package version, build dependency, entry points and web assets |
 
 ```sh
-orchestra-forge compose --composition examples/demo.json --output samples/demo.mid
-orchestra-forge render --midi samples/demo.mid --output samples/demo.wav
-python -m unittest discover -s tests -v
+.venv/bin/python -m unittest discover -s tests -v
 ```
 
-## Modules
+## Keep game music private
 
-- `composition.py`: immutable note/part/composition data and validated JSON input.
-- `midi.py`: Standard MIDI File type 1 writer, tempo and 4/4 metadata, UTF-8 track labels.
-- `cli.py`: composition and offline FluidSynth rendering at 44.1 kHz, stereo 16-bit WAV.
+Store game compositions, audio, arrangement logic and approval records **outside this public checkout**, in a separately controlled private project. This reusable tool never requires publishing input music. Audio, MIDI, SoundFonts, virtual environments and a `private/` folder are ignored here as a secondary safeguard. `.gitignore` does not protect previously tracked files or arbitrary JSON; review staged files before publishing.
 
-## Licensing and commercial use
+## Other systems
 
-The source and generic example are MIT licensed; see `LICENSE`. Private compositions remain separate from the public source license. Using the tool does not require publishing your compositions. Rights to input melodies and instrument samples must be assessed separately.
+The Python package is portable. On Linux, install Python/venv and FluidSynth using your distribution's package manager, then use the same scripts. On Windows, install Python 3.10+, FluidSynth on PATH and your SoundFont, then run:
 
-[FluidSynth](https://www.fluidsynth.org/) is a separately installed LGPL synthesizer. Its license does not license your chosen SoundFont. Review the SoundFont's exact version and terms, and keep its license locally. [GeneralUser GS v1.471's license](https://github.com/planet-s/generaluser-gs/blob/master/LICENSE.txt) permits commercial music creation and profit from recordings, but the author notes incomplete provenance for some inherited samples. That permission is not a guarantee of sample provenance. Shipping a SoundFont or embedding the synthesizer has separate redistribution requirements from shipping rendered audio.
+```powershell
+py -m venv .venv
+.venv\Scripts\python -m pip install .
+.venv\Scripts\orchestra-forge-audiolizer --soundfont C:\path\library.sf2
+```
 
-## Current limitations
+The shell launchers target macOS/Linux. These other-system instructions have not been exercised on those systems.
 
-- No trained generative model, automatic arrangement, stems, GUI, or loudness mastering.
-- One fixed tempo and 4/4 metadata per composition; melodic General MIDI instruments only.
-- FluidSynth exports release/reverb tails beyond the written phrase. A 30-second composition can produce a longer WAV. Seamless game loops need listening and deliberate tail wrapping/crossfading; this tool does not yet do that.
-- SoundFont quality determines realism; orchestral phrasing and dynamics require manual refinement.
-- JSON edits are explicit note data. Reusable composition algorithms can be added as modules without publishing private melodies.
+## Licensing and limitations
+
+Source and generic example are MIT licensed (`LICENSE`). Rights to your input melodies and instrument samples are separate. [FluidSynth](https://www.fluidsynth.org/) is separately installed under LGPL; its license does not license a SoundFont. [GeneralUser GS v1.471's license](https://github.com/planet-s/generaluser-gs/blob/master/LICENSE.txt) permits commercial recordings but notes incomplete sample provenance. Review exact versions and retain their terms. Redistribution of libraries or a synthesizer differs from distributing rendered audio.
+
+One fixed tempo and meter per composition; melodic GM instruments only. No adaptive arrangement, stems or loudness mastering. Raw WAVs include release/reverb tails, so game loops need deliberate tail handling and listening. Instrument realism depends on the chosen SoundFont.

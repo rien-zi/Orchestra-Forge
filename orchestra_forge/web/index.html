@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Audiolizer · Orchestra Forge</title><link rel="stylesheet" href="/style.css"><script src="/app.js" defer></script></head>
+<body>
+<div class="shell">
+<header><a class="brand" href="/" aria-label="Audiolizer home"><span class="brand-mark">♩</span><span>Orchestra Forge<small>YOUR LOCAL SOUND STUDIO</small></span></a><span class="local-badge"><span></span>Local playground</span></header>
+<section class="intro"><div><p class="eyebrow">A LITTLE ROOM FOR LISTENING</p><h1>Audiolizer<span>♪</span></h1><p>Find the sound that feels like your world.</p></div><div class="soundfont"><span>INSTRUMENT LIBRARY</span><strong id="soundfont">Connecting…</strong></div></section>
+<main>
+<aside class="card instruments"><div class="section-heading"><span class="step">01</span><h2>Choose a sound</h2></div><p class="muted">Start with a familiar voice, or explore.</p>
+<div class="favorites" id="favorites" aria-label="Favorite instruments"></div>
+<label class="field-label" for="instrument">All instruments</label><select id="instrument" aria-label="Instrument"></select>
+<p class="instrument-tip" id="instrumentTip">A soft piano is a good place to begin.</p><div class="aside-note"><span>✦</span><p>Hear the same instrument library used in your music. Explore notes without editing compositions.</p></div></aside>
+<section class="card studio"><div class="studio-heading"><div class="section-heading"><span class="step">02</span><h2>Give it a little melody</h2></div><span class="selected-instrument" id="selectedInstrument">Acoustic Grand Piano</span></div>
+<div class="note-display"><div><span class="field-label">SELECTED NOTE</span><strong id="noteName">C4</strong></div><div class="note-details"><span id="frequency">261.6 Hz</span><span id="midiLabel">MIDI 60 · Middle C</span></div><button id="octaveDown" class="icon-button" aria-label="Show a lower octave">−</button><span class="octave-label">Keyboard<br><strong id="keyboardRange">C3 – C5</strong></span><button id="octaveUp" class="icon-button" aria-label="Show a higher octave">+</button></div>
+<div class="keyboard-wrap"><div id="keyboard" class="keyboard" role="group" aria-label="Piano keyboard"></div></div><p class="keyboard-hint">Click a key to hear it · Arrow keys move one semitone</p>
+<div class="controls"><label>Pitch <output id="pitchValue">C4</output><input id="pitch" type="range" min="24" max="96" value="60"></label><label>Touch <output id="velocityValue">40 · Soft</output><input id="velocity" type="range" min="1" max="100" value="40"></label><label>Note length <output id="durationValue">0.8 s</output><input id="duration" type="range" min="0.2" max="3" step="0.1" value="0.8"></label></div>
+<div class="play-row"><div class="patterns" role="group" aria-label="Preview pattern"><button class="pattern active" data-pattern="note" aria-pressed="true">One note</button><button class="pattern" data-pattern="chord" aria-pressed="false">Major chord</button><button class="pattern" data-pattern="phrase" aria-pressed="false">Little phrase</button></div><button id="play" class="primary">▶ <span>Listen</span></button><button id="stop" class="secondary">Stop</button></div>
+<div class="playback"><div class="sound-bars" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><p id="status" role="status" aria-live="polite">Pick a key. See what it sounds like.</p><label class="listen-volume">Listening volume<input type="range" id="volume" min="0" max="100" value="60" aria-label="Listening volume"></label></div><audio id="audio" controls></audio>
+</section>
+</main>
+<section class="share card"><div><p class="eyebrow">WHEN YOU FIND SOMETHING YOU LIKE</p><h2>Bring the sound back to our chat.</h2><p class="muted">Copy the instrument and note settings, then tell me how they feel.</p></div><div class="share-right"><code id="shareText">Piano · C4 · MIDI 60</code><button id="copy" class="secondary">Copy settings ↗</button></div></section>
+<footer><span>Made for small, enchanted worlds.</span><span>Local previews · No uploads · No changes to compositions</span></footer>
+</div></body></html>
